@@ -22,6 +22,7 @@ class AppSettings(context: Context) {
         detectorConfThreshold = prefs.getFloat("detectorConfThreshold", 0.35f),
         nmsThreshold = prefs.getFloat("nmsThreshold", 0.45f),
         maxDetections = prefs.getInt("maxDetections", 10),
+        coldStartCollectionEnabled = prefs.getBoolean("coldStartCollectionEnabled", true),
     )
 
     fun save(config: AppConfig) {
@@ -38,6 +39,7 @@ class AppSettings(context: Context) {
             .putFloat("detectorConfThreshold", config.detectorConfThreshold)
             .putFloat("nmsThreshold", config.nmsThreshold)
             .putInt("maxDetections", config.maxDetections)
+            .putBoolean("coldStartCollectionEnabled", config.coldStartCollectionEnabled)
             .apply()
     }
 }

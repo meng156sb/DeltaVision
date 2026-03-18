@@ -16,6 +16,7 @@ import com.deltavision.app.detector.SimpleTracker
 import com.deltavision.app.model.AppConfig
 import com.deltavision.app.model.Detection
 import com.deltavision.app.model.FrameMeta
+import com.deltavision.app.model.FramePacket
 import com.deltavision.app.model.ReviewStatus
 import com.deltavision.app.overlay.OverlayWindowController
 import com.deltavision.app.prefs.AppSettings
@@ -102,17 +103,25 @@ class DetectionService : Service() {
 
             val frame = frameSource.capture(config)
             if (frame == null) {
-                overlayController.show(emptyList(), "抓帧失败")
+                overlayController.show(emptyList(), "capture failed")
                 delay(frameDelayMs())
                 continue
             }
 
-            val detections = tracker.assign(detectorEngine.detectRoi(frame.rgbBytes, frame.roiPixelRect, frame.timestampNs))
-            overlayController.show(
-                detections,
-                "det=${detections.size} fps=${config.targetFps} model=${if (detectorEngine.isReady()) "ready" else "missing"}",
-            )
-            maybeUpload(frame, detections)
+            val detectorReady = detectorEngine.isReady()
+            val detections = if (detectorReady) {
+                tracker.assign(detectorEngine.detectRoi(frame.rgbBytes, frame.roiPixelRect, frame.timestampNs))
+            } else {
+                emptyList()
+            }
+
+            val statusText = when {
+                detectorReady -> "det=${detections.size} fps=${config.targetFps} model=ready"
+                config.coldStartCollectionEnabled -> "manual collect fps=${config.targetFps} model=missing"
+                else -> "idle fps=${config.targetFps} model=missing"
+            }
+            overlayController.show(detections, statusText)
+            maybeUpload(frame, detections, detectorReady)
             syncUploader.flush()
             delay(frameDelayMs())
         }
@@ -130,11 +139,23 @@ class DetectionService : Service() {
         )
     }
 
-    private fun maybeUpload(frame: com.deltavision.app.model.FramePacket, detections: List<Detection>) {
-        if (detections.isEmpty()) return
+    private fun maybeUpload(frame: FramePacket, detections: List<Detection>, detectorReady: Boolean) {
         val now = System.currentTimeMillis()
-        if (lastFrameHash != null && ImageHash.hammingDistance(lastFrameHash!!, frame.frameHash) <= 4) return
-        if (now - lastUploadTimestampMs < 333) return
+        val similarFrame = lastFrameHash != null && ImageHash.hammingDistance(lastFrameHash!!, frame.frameHash) <= 4
+
+        if (detections.isEmpty()) {
+            val allowColdStartUpload = config.coldStartCollectionEnabled && !detectorReady
+            if (!allowColdStartUpload) return
+            if (similarFrame) return
+            if (now - lastUploadTimestampMs < COLD_START_UPLOAD_INTERVAL_MS) return
+            syncUploader.enqueue(buildFrameMeta(frame), frame.jpegBytes, emptyList(), ReviewStatus.PENDING_REVIEW, frame.frameHash)
+            lastUploadTimestampMs = now
+            lastFrameHash = frame.frameHash
+            return
+        }
+
+        if (similarFrame) return
+        if (now - lastUploadTimestampMs < DETECTION_UPLOAD_INTERVAL_MS) return
 
         val highest = detections.maxOf { it.confidence }
         val status = when {
@@ -148,7 +169,14 @@ class DetectionService : Service() {
         }
         if (!allowByTrack) return
 
-        val frameMeta = FrameMeta(
+        syncUploader.enqueue(buildFrameMeta(frame), frame.jpegBytes, detections, status, frame.frameHash)
+        lastUploadTimestampMs = now
+        lastFrameHash = frame.frameHash
+        detections.forEach { lastTrackUploadMs[it.trackId] = now }
+    }
+
+    private fun buildFrameMeta(frame: FramePacket): FrameMeta {
+        return FrameMeta(
             sessionId = sessionId,
             deviceId = deviceId,
             gamePackage = config.gamePackage,
@@ -159,10 +187,6 @@ class DetectionService : Service() {
             orientation = "landscape",
             timestampNs = frame.timestampNs,
         )
-        syncUploader.enqueue(frameMeta, frame.jpegBytes, detections, status, frame.frameHash)
-        lastUploadTimestampMs = now
-        lastFrameHash = frame.frameHash
-        detections.forEach { lastTrackUploadMs[it.trackId] = now }
     }
 
     private fun frameDelayMs(): Long = (1000L / config.targetFps.coerceAtLeast(1))
@@ -204,6 +228,8 @@ class DetectionService : Service() {
         private const val EXTRA_CONFIG = "extra_config"
         private const val ACTION_START = "com.deltavision.action.START"
         private const val ACTION_STOP = "com.deltavision.action.STOP"
+        private const val DETECTION_UPLOAD_INTERVAL_MS = 333L
+        private const val COLD_START_UPLOAD_INTERVAL_MS = 1_000L
 
         fun buildStartIntent(context: Context, config: AppConfig): Intent = Intent(context, DetectionService::class.java).apply {
             action = ACTION_START

@@ -17,6 +17,7 @@ DeltaVision 是一个 Android + PC 的完整采集闭环工程：
 - 中心 ROI 裁剪
 - Kotlin + ONNX Runtime 端上推理
 - 运行时叠框显示
+- 冷启动空框采集
 - 采集队列、断网重试、局域网同步
 
 ### Collector 端
@@ -117,8 +118,32 @@ python app.py
 - 导出 `448x448` 的单类 `person_body` ONNX
 - 重命名为 `model.onnx` 后拷到手机目录
 
+## 冷启动采集与一键训练
+
+### 没有模型时
+1. 电脑启动 Collector
+2. 手机安装 APK，并配置 Collector 地址和 token
+3. 勾选 App 里的 `Upload empty ROI frames when model is missing`
+4. 不放 `model.onnx`，直接进入游戏点击 `Start`
+5. 电脑端打开 Collector，手工画框后点“人工通过”
+6. 点“导出 YOLO 数据集”
+7. 运行下面的一键脚本：
+
+```powershell
+cd D:\梦梦鸭\工作区\DeltaVision
+powershell -ExecutionPolicy Bypass -File .\tools\retrain_model.ps1 -Epochs 80 -PushToPhone
+```
+
+### 脚本会自动完成
+- 创建 `D:\梦梦鸭\工作区\DeltaVision\.venv-train`
+- 安装训练依赖
+- 训练 YOLO 模型
+- 导出 `D:\梦梦鸭\工作区\DeltaVision\models\trained\person_body\model.onnx`
+- 自动推送到手机模型目录
+
 ## 实际使用步骤
 
+### 有初始模型时
 1. 电脑启动 Collector
 2. 手机安装 APK
 3. 手机上授予悬浮窗、使用情况访问和 root 权限
@@ -126,8 +151,10 @@ python app.py
 5. 把 `model.onnx` 放入手机指定目录
 6. 进入游戏，启动识别服务
 7. 在电脑端复核样本并导出训练集
+8. 运行 `tools\retrain_model.ps1` 训练并回推新模型
 
 ## 已验证
 - `assembleDebug` 可通过
-- `assembleRelease` 的签名读取链已接入
+- `assembleRelease` 可通过
+- `tools\retrain_model.ps1` 已通过 PowerShell 语法检查
 - Collector Python 代码可通过语法检查

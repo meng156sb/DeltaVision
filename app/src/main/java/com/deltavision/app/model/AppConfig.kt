@@ -12,4 +12,5 @@ data class AppConfig(
     val detectorConfThreshold: Float = 0.35f,
     val nmsThreshold: Float = 0.45f,
     val maxDetections: Int = 10,
+    val coldStartCollectionEnabled: Boolean = true,
 ) : Serializable

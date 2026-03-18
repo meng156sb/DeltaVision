@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Root 抓帧 + 中心 ROI 人物检测 + 自动标注同步"
+            android:text="Root capture + center ROI detection + dataset loop"
             android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
 
         <TextView
@@ -31,7 +31,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="状态：未启动"
+            android:text="Status: stopped"
             android:textStyle="bold" />
 
         <EditText
@@ -39,7 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="目标游戏包名"
+            android:hint="Game package"
             android:inputType="text"
             android:text="com.tencent.tmgp.dfm" />
 
@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="Collector 地址，例如 http://192.168.1.10:8000"
+            android:hint="Collector URL, e.g. http://192.168.1.10:8000"
             android:inputType="textUri" />
 
         <EditText
@@ -64,7 +64,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="ROI 宽比例，例如 0.38"
+            android:hint="ROI width ratio, e.g. 0.38"
             android:inputType="numberDecimal"
             android:text="0.38" />
 
@@ -73,7 +73,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="ROI 高比例，例如 0.52"
+            android:hint="ROI height ratio, e.g. 0.52"
             android:inputType="numberDecimal"
             android:text="0.52" />
 
@@ -82,9 +82,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:hint="目标抓帧 FPS"
+            android:hint="Target FPS"
             android:inputType="number"
             android:text="15" />
+
+        <CheckBox
+            android:id="@+id/coldStartCollectionCheckbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:checked="true"
+            android:text="Upload empty ROI frames when model is missing" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -97,7 +105,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="检查权限" />
+                android:text="Permissions" />
 
             <Button
                 android:id="@+id/rootButton"
@@ -105,7 +113,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
-                android:text="测试 Root" />
+                android:text="Test root" />
         </LinearLayout>
 
         <LinearLayout
@@ -119,7 +127,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="开始识别" />
+                android:text="Start" />
 
             <Button
                 android:id="@+id/stopButton"
@@ -127,7 +135,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
-                android:text="停止" />
+                android:text="Stop" />
         </LinearLayout>
 
         <TextView
@@ -135,6 +143,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="说明：当前 MVP 使用 root screencap 循环抓帧。若 assets/models 或应用外部目录下缺少自定义 ncnn 模型，检测引擎会处于未就绪状态，但采集与同步链路仍可验证。" />
+            android:text="Hint: if model.onnx is missing, keep cold-start upload enabled, collect frames in Collector, review boxes on PC, export, retrain, and push the new model back to the phone." />
     </LinearLayout>
 </ScrollView>

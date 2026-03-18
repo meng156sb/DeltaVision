@@ -38,15 +38,16 @@ class MainActivity : ComponentActivity() {
         binding.roiWidthInput.setText(config.roiConfig.width.toString())
         binding.roiHeightInput.setText(config.roiConfig.height.toString())
         binding.targetFpsInput.setText(config.targetFps.toString())
+        binding.coldStartCollectionCheckbox.isChecked = config.coldStartCollectionEnabled
+        val modelPath = "${getExternalFilesDir(null)?.absolutePath}/models/model.onnx"
         binding.statusText.text = buildString {
-            append("状态：")
-            append(if (running) "运行中" else "待启动")
-            append("\n目标包名：")
-            append(config.gamePackage)
-            append("\nCollector：")
-            append(if (config.collectorBaseUrl.isBlank()) "未配置" else config.collectorBaseUrl)
-            append("\nROI：${config.roiConfig.width} x ${config.roiConfig.height}")
-            append("\n目标 FPS：${config.targetFps}")
+            appendLine("Status: ${if (running) "running" else "stopped"}")
+            appendLine("Game package: ${config.gamePackage}")
+            appendLine("Collector: ${if (config.collectorBaseUrl.isBlank()) "not set" else config.collectorBaseUrl}")
+            appendLine("ROI: ${config.roiConfig.width} x ${config.roiConfig.height}")
+            appendLine("Target FPS: ${config.targetFps}")
+            appendLine("Cold-start upload: ${if (config.coldStartCollectionEnabled) "on" else "off"}")
+            append("Model path: $modelPath")
         }
     }
 
@@ -58,14 +59,14 @@ class MainActivity : ComponentActivity() {
             if (!ForegroundAppMonitor.hasUsageAccess(this)) {
                 startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
             }
-            Toast.makeText(this, "已检查悬浮窗和使用情况访问权限", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Opened permission pages", Toast.LENGTH_SHORT).show()
         }
 
         binding.rootButton.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
                 val ok = RootShell.canUseRoot()
                 launch(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, if (ok) "Root 可用" else "Root 不可用", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, if (ok) "Root ready" else "Root unavailable", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -74,11 +75,11 @@ class MainActivity : ComponentActivity() {
             val config = readConfig()
             settings.save(config)
             if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Grant overlay permission first", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (!ForegroundAppMonitor.hasUsageAccess(this)) {
-                Toast.makeText(this, "请先授予使用情况访问权限", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Grant usage access first", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             ContextCompat.startForegroundService(this, DetectionService.buildStartIntent(this, config))
@@ -102,6 +103,7 @@ class MainActivity : ComponentActivity() {
                 height = binding.roiHeightInput.text?.toString()?.toFloatOrNull() ?: current.roiConfig.height,
             ),
             targetFps = binding.targetFpsInput.text?.toString()?.toIntOrNull()?.coerceIn(1, 30) ?: current.targetFps,
+            coldStartCollectionEnabled = binding.coldStartCollectionCheckbox.isChecked,
         )
     }
 }
