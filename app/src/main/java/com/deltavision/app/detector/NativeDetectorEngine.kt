@@ -181,20 +181,26 @@ class NativeDetectorEngine : DetectorEngine {
     }
 
     private fun scoreFromTail(tailRows: List<FloatArray>, index: Int): Float {
+        if (tailRows.isEmpty()) return 0.0f
         if (tailRows.size == 1) return tailRows[0].getOrElse(index) { 0.0f }
-        val rawMax = tailRows.maxOf { it.getOrElse(index) { 0.0f } }
+        if (tailRows.size >= COCO_CLASS_COUNT) {
+            return tailRows[COCO_PERSON_CLASS_INDEX].getOrElse(index) { 0.0f }
+        }
         val objectness = tailRows[0].getOrElse(index) { 0.0f }
-        val classMax = tailRows.drop(1).maxOfOrNull { it.getOrElse(index) { 0.0f } } ?: 0.0f
-        return max(rawMax, objectness * classMax)
+        val personScore = tailRows.getOrElse(1) { tailRows[0] }.getOrElse(index) { 0.0f }
+        return max(personScore, objectness * personScore)
     }
 
     private fun scoreFromRow(values: FloatArray): Float {
         val tail = values.copyOfRange(4, values.size)
+        if (tail.isEmpty()) return 0.0f
         if (tail.size == 1) return tail[0]
-        val rawMax = tail.maxOrNull() ?: 0.0f
+        if (tail.size >= COCO_CLASS_COUNT) {
+            return tail.getOrElse(COCO_PERSON_CLASS_INDEX) { 0.0f }
+        }
         val objectness = tail[0]
-        val classMax = tail.drop(1).maxOrNull() ?: 0.0f
-        return max(rawMax, objectness * classMax)
+        val personScore = tail.getOrElse(1) { tail[0] }
+        return max(personScore, objectness * personScore)
     }
 
     private fun buildCandidate(
@@ -257,5 +263,7 @@ class NativeDetectorEngine : DetectorEngine {
     companion object {
         private const val TAG = "NativeDetectorEngine"
         private const val MODEL_FILE_NAME = "model.onnx"
+        private const val COCO_PERSON_CLASS_INDEX = 0
+        private const val COCO_CLASS_COUNT = 80
     }
 }
