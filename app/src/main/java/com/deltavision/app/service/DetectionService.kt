@@ -94,8 +94,7 @@ class DetectionService : Service() {
     private suspend fun runLoop() {
         while (serviceScope.isActive) {
             if (!ForegroundAppMonitor.isTargetForeground(this, config.gamePackage)) {
-                val activePackage = ForegroundAppMonitor.currentForegroundPackage(this) ?: "unknown"
-                overlayController.show(emptyList(), "???? target=${config.gamePackage} current=$activePackage")
+                overlayController.show(emptyList(), "waiting foreground target=${config.gamePackage} ${ForegroundAppMonitor.describeForeground(this)}")
                 syncUploader.flush()
                 delay(500)
                 continue
