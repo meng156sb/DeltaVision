@@ -1,0 +1,87 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeltaVision Collector</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div>
+        <h1>DeltaVision Collector</h1>
+        <p class="muted">局域网采集、伪标签复核、YOLO 导出</p>
+      </div>
+      <div class="token-block">
+        <span class="muted">Token</span>
+        <code>{{ collector_token }}</code>
+      </div>
+    </header>
+
+    <section class="stats">
+      <a class="pill {% if status == 'pending_review' %}active{% endif %}" href="/?status=pending_review">待复核 {{ stats.get('pending_review', 0) }}</a>
+      <a class="pill {% if status == 'auto_accepted' %}active{% endif %}" href="/?status=auto_accepted">自动通过 {{ stats.get('auto_accepted', 0) }}</a>
+      <a class="pill {% if status == 'approved' %}active{% endif %}" href="/?status=approved">人工通过 {{ stats.get('approved', 0) }}</a>
+      <a class="pill {% if status == 'rejected' %}active{% endif %}" href="/?status=rejected">已拒绝 {{ stats.get('rejected', 0) }}</a>
+      <span class="pill total">总计 {{ stats.get('all', 0) }}</span>
+    </section>
+
+    <section class="toolbar">
+      <form method="post" action="/export/yolo">
+        <button type="submit">导出 YOLO 数据集</button>
+      </form>
+    </section>
+
+    {% for item in items %}
+    {% set frame = item.frame %}
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2>Frame #{{ frame['id'] }}</h2>
+          <p class="muted">{{ frame['session_id'] }} · {{ frame['review_status'] }} · {{ frame['timestamp_ns'] }}</p>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <div class="canvas-panel">
+          <canvas
+            class="review-canvas"
+            data-image-src="/dataset/{{ frame['image_path'] }}"
+            data-boxes='{{ item.detections_json | tojson | safe }}'
+            data-textarea-id="boxes-json-{{ frame['id'] }}"
+            data-reset-id="reset-boxes-{{ frame['id'] }}"
+          ></canvas>
+          <p class="muted small">拖拽空白区域新增框；拖动已有框可移动；双击框可删除。</p>
+        </div>
+
+        <form method="post" action="/review/{{ frame['id'] }}" class="form-panel">
+          <label for="boxes-json-{{ frame['id'] }}">Boxes JSON</label>
+          <textarea id="boxes-json-{{ frame['id'] }}" name="boxes_json" rows="12">{{ item.detections_json }}</textarea>
+
+          <div class="button-row compact">
+            <button id="reset-boxes-{{ frame['id'] }}" type="button" class="secondary">重置为伪标签</button>
+          </div>
+
+          <label for="note-{{ frame['id'] }}">Note</label>
+          <input id="note-{{ frame['id'] }}" type="text" name="note" value="">
+
+          <div class="button-row">
+            <button name="decision" value="approved" type="submit">人工通过</button>
+            <button name="decision" value="rejected" type="submit" class="danger">拒绝</button>
+          </div>
+        </form>
+      </div>
+    </section>
+    {% endfor %}
+
+    {% if not items %}
+    <section class="empty-state">
+      <h2>当前没有 {{ status }} 样本</h2>
+      <p class="muted">切换上方筛选，或先让手机端开始上传。</p>
+    </section>
+    {% endif %}
+  </main>
+  <script src="/static/editor.js"></script>
+</body>
+</html>

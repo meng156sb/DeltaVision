@@ -1,0 +1,43 @@
+﻿# Android / Gradle
+.gradle/
+build/
+app/build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# Python / Collector
+collector/.venv/
+collector/runtime/
+.venv/
+.venv-train/
+__pycache__/
+*.pyc
+
+# Secrets / signing
+*.jks
+*.keystore
+*.p12
+key.properties
+keystore.properties
+signing.properties
+
+# ML artifacts
+*.onnx
+*.pt
+*.bin
+*.param
+runs/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.apk
+*.aab

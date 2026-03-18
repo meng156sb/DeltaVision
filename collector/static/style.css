@@ -1,0 +1,149 @@
+﻿body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  background: #111827;
+  color: #f9fafb;
+}
+
+main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.topbar,
+.card-head,
+.toolbar,
+.button-row,
+.button-row.compact,
+.stats,
+.editor-grid {
+  display: flex;
+}
+
+.topbar,
+.toolbar,
+.card-head {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topbar {
+  gap: 16px;
+}
+
+.stats {
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: #f9fafb;
+  border: 1px solid #374151;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #1f2937;
+}
+
+.pill.active {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.pill.total {
+  background: #0f172a;
+}
+
+.card {
+  background: #1f2937;
+  border-radius: 16px;
+  padding: 18px;
+  margin: 18px 0;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+}
+
+.editor-grid {
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.canvas-panel,
+.form-panel {
+  flex: 1;
+}
+
+.review-canvas {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+  background: #020617;
+  border: 1px solid #374151;
+  cursor: crosshair;
+}
+
+textarea,
+input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid #4b5563;
+  background: #0f172a;
+  color: #f9fafb;
+  padding: 10px;
+  margin: 8px 0 12px;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: #2563eb;
+  color: #f9fafb;
+}
+
+button.secondary {
+  background: #334155;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+.button-row {
+  gap: 12px;
+}
+
+.button-row.compact {
+  justify-content: flex-start;
+  margin-bottom: 12px;
+}
+
+.muted {
+  color: #cbd5e1;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.token-block {
+  text-align: right;
+}
+
+.empty-state {
+  padding: 32px;
+  background: #1f2937;
+  border-radius: 16px;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .editor-grid {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DeltaVision</string>
+    <string name="service_channel_name">DeltaVision Runtime</string>
+    <string name="service_channel_description">目标识别与自动标注运行中</string>
+    <string name="service_notification_title">DeltaVision 正在运行</string>
+    <string name="service_notification_text">正在抓帧、检测并同步伪标签</string>
+</resources>
